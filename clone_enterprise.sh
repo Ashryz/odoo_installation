@@ -12,7 +12,7 @@ if [[ -z "$USERNAME" || -z "$TOKEN" || -z "$ODOO_VERSION" ]]; then
 fi
 
 echo "Cloning Odoo Enterprise version ${ODOO_VERSION}..."
-git clone https://${USERNAME}:${TOKEN}@github.com/odoo/enterprise.git --depth=1 --branch=${ODOO_VERSION} ./enterprise
+git clone https://${USERNAME}:${TOKEN}@github.com/odoo/enterprise.git --depth=1 --branch=${ODOO_VERSION} ./odoo/enterprise
 
 if [[ $? -eq 0 ]]; then
     echo "Successfully cloned enterprise ${ODOO_VERSION}"
