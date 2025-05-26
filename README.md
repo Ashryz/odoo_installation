@@ -7,9 +7,11 @@ install odoo by one click using a simple script which you can run it to fully in
     https://github.com/Ashryz/odoo_installation.git
 ### Select directory to run script 
     cd [ your-aim-directory ]
-    run the script >>> ./path-to-script/script-name
+    chmod +x ./path-to-script/script-name
+    sudo ./path-to-script/script-name
 ### Run the script 
-    - in development installing by one command 
+    # run this script on your server
+    sudo ./install_odoo.sh <user> <version>  ex: odoo17 17.0 
 ### Clone odoo only
     ./clone_odoo.sh <odoo_version>  ex:17.0
 ### Clone enterprise only
