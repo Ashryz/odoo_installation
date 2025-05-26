@@ -9,7 +9,7 @@ if [[ -z "$ODOO_VERSION" ]]; then
 fi
 
 echo "Cloning Odoo version ${ODOO_VERSION}..."
-git clone https://github.com/odoo/odoo.git --depth=1 --branch=${ODOO_VERSION} ./odoo
+git clone https://github.com/odoo/odoo.git --depth=1 --branch=${ODOO_VERSION} ./odoo/odoo${ODOO_VERSION}
 
 if [[ $? -eq 0 ]]; then
 	echo "Successfully cloned odoo ${ODOO_VERSION}"
