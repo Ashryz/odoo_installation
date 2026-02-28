@@ -1,0 +1,116 @@
+# Docker Compose (Odoo 18 + PostgreSQL)
+mkdir odoo18
+cd odoo18
+
+# Create docker-compose.yml
+
+version: '3.8'
+
+services:
+  db:
+    image: postgres:15
+    container_name: odoo18-db
+    environment:
+      POSTGRES_DB: postgres
+      POSTGRES_USER: odoo
+      POSTGRES_PASSWORD: strongpassword
+    volumes:
+      - db-data:/var/lib/postgresql/data
+    restart: always
+
+  odoo:
+    image: odoo:18
+    container_name: odoo18
+    depends_on:
+      - db
+    environment:
+      HOST: db
+      USER: odoo
+      PASSWORD: strongpassword
+    volumes:
+      - odoo-web-data:/var/lib/odoo
+      - ./conf:/etc/odoo
+      - ./addons:/mnt/extra-addons
+    ports:
+      - "127.0.0.1:8018:8018"
+    restart: always
+
+volumes:
+  db-data:
+  odoo-web-data:
+  
+# start the docker and test it 
+
+docker compose up -d
+http://127.0.0.1:8018
+
+# add nginx configration 
+
+sudo apt update
+sudo apt install nginx
+
+sudo nano /etc/nginx/sites-available/subdomain
+
+upstream odoo18 {
+    server 127.0.0.1:8018;
+}
+
+upstream odoo18_chat {
+    server 127.0.0.1:8072;
+}
+
+server {
+    listen 80;
+    server_name subdomain.domain.com;
+
+    proxy_read_timeout 720s;
+    proxy_connect_timeout 720s;
+    proxy_send_timeout 720s;
+
+    proxy_set_header X-Forwarded-Host $host;
+    proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+    proxy_set_header X-Forwarded-Proto $scheme;
+    proxy_set_header X-Real-IP $remote_addr;
+
+    access_log /var/log/nginx/odoo18.access.log;
+    error_log  /var/log/nginx/odoo18.error.log;
+
+    # Main Odoo
+    location / {
+        proxy_pass http://odoo18;
+        proxy_redirect off;
+    }
+
+    # Longpolling (chat, bus)
+    location /longpolling {
+        proxy_pass http://odoo18_chat;
+    }
+
+    # Static files
+    location ~* /web/static/ {
+        proxy_cache_valid 200 90m;
+        proxy_buffering on;
+        expires 10d;
+        proxy_pass http://odoo18;
+    }
+
+    gzip on;
+    gzip_types text/css text/scss text/plain text/xml application/json application/javascript;
+}
+
+# enable this site with nginx
+sudo ln -s /etc/nginx/sites-available/subdomain /etc/nginx/sites-enabled/
+sudo nginx -t
+sudo systemctl reload nginx
+
+# update odoo conf file with this params and restart service
+docker exec -it odoo18 bash
+nano /etc/odoo/odoo18.conf
+proxy_mode = True
+xmlrpc_interface = 127.0.0.1
+longpolling_port = 8072
+docker restart odoo18
+# Enable ssl certificate 
+
+sudo apt install certbot python3-certbot-nginx
+sudo certbot --nginx -d subdomain.mydomain.com
